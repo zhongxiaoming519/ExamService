@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.extr.persistence.ExamMapper">
+
+	<!-- 试卷维护 -->
+	
+	<!-- 章节测试列表查询 -->
+	<select id="selectChapterTestList" resultType="com.extr.domain.exam.ChapterTest">
+		<!-- SELECT
+		a.id,a.flag,a.cate,a.uid,a.cid,a.cpath,a.no,
+		a.time_limit,a.time_used,a.score,a.add_date,a.time_start,
+		b.title as chapter,c.title as course 
+		FROM web_user_exam a JOIN web_course_chapter b ON a.cid=b.iid 
+		JOIN web_course c ON b.iid=c.id
+		WHERE 1=1
+		<if test="username != null">AND uid LIKE "%"#{username}"%"</if>
+		<if test="cate != null"> AND b.cate=#{cate}</if>
+		<if test="course != null"> AND c.title like "%"#{course}"%"</if>
+		<if test="chapter != null"> AND b.title like"%"#{chapter}"%"</if>
+		
+		ORDER BY a.id-->
+		
+		SELECT a.id,a.flag,a.cate,a.uid,a.cid,a.cpath,a.no,
+		a.time_limit,a.time_used,a.score,a.add_date,a.time_start,b.username,b.state 
+		,(select c.title from web_course c where c.id = a.cid) as course,(select  d.title from web_course_chapter d where  CONCAT(d.path,'-', d.id) = a.cpath) as chapter 
+		
+		FROM web_user_exam a  JOIN web_user b ON a.uid = b.id join web_course_chapter d on CONCAT(d.path,'-', d.id) = a.cpath where 1=1 
+		<if test="username != null">AND b.username LIKE "%"#{username}"%"</if>
+		
+		<if test="course != null"> AND a.cid = #{course}</if>
+		<if test="chapter != null"> AND a.cpath = #{chapter}</if>
+		
+	</select>
+	
+	<!-- 章节测试总数 -->
+	<select id="getChapterTestListCount" resultType="int">
+		SELECT count(1) 
+			FROM web_user_exam a  JOIN web_user b ON a.uid = b.id where 1=1 
+		<if test="username != null">AND b.username LIKE "%"#{username}"%"</if>
+		
+		<if test="course != null"> AND a.cid = #{course}</if>
+		<if test="chapter != null"> AND a.cpath = #{chapter}</if>
+	</select>
+	
+	
+	<!-- 试卷维护：结业考试列表查询 -->
+	<select id="getGraduationExamList" resultType="com.extr.domain.exam.GraduationExam">
+		SELECT a.*,b.title as specialName FROM test_types a  JOIN web_path b on a.major_id = b.id ORDER BY id 
+	</select>
+	<!-- 试卷维护：修改结业考试记录有效值 -->
+	<update id="updateGraduationExamEnabledById" parameterType="int">
+		UPDATE test_types SET enabled=#{enabled} WHERE id=#{id}
+	</update>
+	
+	<!-- 试卷维护：结业考试：管理试卷列表查询 -->
+	<select id="getExamManagementList" resultType="com.extr.domain.exam.ExamManagement">
+		SELECT a.* FROM suites a JOIN test_types b ON a.test_type_id=b.id
+		WHERE b.id=#{examTypesId}
+	</select>
+	<!-- 试卷维护：修改管理试卷记录：是否有效、是否设为结业考试、是否设为模拟考试 -->
+	<update id="updateExamManagementById" parameterType="int">
+		UPDATE suites SET 
+		
+		<if test="is_real != -1">is_real=#{is_real}, </if>
+		<if test="enabled != -1">enabled=#{enabled}, </if>
+		<if test="is_mock != -1">is_mock=#{is_mock} </if>
+		
+		WHERE id=#{id}
+	</update>
+	
+	<!-- 添加试卷 -->
+	<insert id="createExamByTestTypeId" parameterType="com.extr.domain.exam.ExamManagement">
+		INSERT INTO suites
+		(name, test_type_id, enabled, is_real, is_mock) 
+		VALUES 
+		(#{name}, #{test_type_id}, #{enabled}, #{is_real}, #{is_mock})
+	</insert>
+	
+	<delete id = "detelesuiteById " parameterType="int">
+		delete from suites where id =#{id}
+	</delete>
+	<delete id ="deleteSuite" parameterType="int">
+		delete from suites  where id =#{id}
+	</delete>
+	<insert id="createTestTypes" parameterType="com.extr.domain.exam.TestType"  useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO test_types(name, duration, major_id) VALUES(#{name}, #{duration}, #{major_id})
+	</insert>
+	<insert id="createQuestionInfo" parameterType="com.extr.domain.exam.QuestionInfo" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO question_infos(test_type_id, idx, type_no, count_no, score, ratio) VALUES(#{test_type_id}, #{idx}, #{type_no}, #{count_no}, 100, #{ratio})
+	</insert>
+
+	<select id="getChoiceQuestions" resultType="com.extr.domain.exam.ChoiceQuestion">
+		select * from choice_questions t where t.suite_id =#{id}
+	</select>
+	<delete id="deleteChoiceQuestionById" parameterType="int" >
+		delete from choice_questions where id =#{id}
+	</delete>
+	
+	<update id ="updateChoiceQuestion" parameterType="com.extr.domain.exam.ChoiceQuestion">
+		update choice_questions set
+		  `suite_id` = #{suite_id},
+		  `order_no` = #{order_no},
+		  `type_no` = #{type_no},
+		  `text` = #{text},
+		  `a` = #{a},
+		  `b` = #{b},
+		  `c` = #{c},
+		  `d` = #{d},
+		  `answer` = #{answer}
+		  where id = #{id}
+	</update>
+	<insert id = "insertChoiceQuestion" parameterType="com.extr.domain.exam.ChoiceQuestion" useGeneratedKeys="true" keyProperty="id">
+		insert into choice_questions (suite_id, order_no,type_no,text,a,b,c,d,answer) values(#{suite_id}, #{order_no},#{type_no},#{text},#{a},#{b},#{c},#{d},#{answer})
+	</insert>
+	
+	
+	<select id="getExamStaticByTestTypeId"  parameterType="int" resultType="com.extr.domain.exam.QuestionInfo">
+		select * from question_infos where test_type_id = #{id}
+	</select>
+	
+	<insert id = "insertCaseQuestion" parameterType="com.extr.domain.exam.CaseQuestion" useGeneratedKeys="true" keyProperty="id">
+		insert into case_questions (suite_id, order_no,text) values(#{suite_id}, #{order_no},#{text})
+	</insert>
+	<update id ="updateCaseQuestion" parameterType="com.extr.domain.exam.CaseQuestion">
+		update case_questions set
+		  `suite_id` = #{suite_id},
+		  `order_no` = #{order_no},
+		  `text` = #{text}
+		  where id = #{id}
+	</update>
+	
+	<delete id ="deleteCaseQuestion" parameterType="int">
+		delete from case_questions  where id =#{id}
+	</delete>
+	<delete id ="deleteCaseSubQuestion" parameterType="int">
+		delete from case_sub_questions  where case_question_id =#{id} 
+	</delete>
+	<select id="getCaseQuestions" resultType="com.extr.domain.exam.CaseQuestion">		
+		select * ,(SELECT count(*) FROM case_sub_questions WHERE case_question_id in( SELECT id from case_questions where suite_id =#{id})) as count from case_questions where suite_id =#{id}		
+	</select>
+	
+	<select id="getSubCaseQuestions" resultType="com.extr.domain.exam.CaseSubQuestion">
+		select * from case_sub_questions where case_question_id = #{id}
+	</select>
+	
+
+	
+	<insert id="insertSubChoiceQuestion" parameterType="com.extr.domain.exam.CaseSubQuestion" useGeneratedKeys="true" keyProperty="id">
+		insert into case_sub_questions (case_question_id, idx,text,a,b,c,d,answer,type_id) values(#{case_question_id}, #{idx},#{text},#{a},#{b},#{c},#{d},#{answer},#{type_id})
+	</insert>
+	<update id ="updateSubCaseQuestion" parameterType="com.extr.domain.exam.CaseSubQuestion">
+		update case_sub_questions set
+		
+		  `text` = #{text},
+		   a = #{a},
+		   b= #{b},
+		    c= #{c},
+		     d= #{d},
+		     answer=#{answer},
+		     type_id=#{answer}
+		  where case_question_id = #{case_question_id} and  idx = #{idx}
+	</update>
+	<delete id="deleteSubCaseQuestionByidxAndCaseQuestionId"  parameterType="com.extr.domain.exam.CaseSubQuestion">
+		delete from case_sub_questions where case_question_id = #{case_question_id} and  idx = #{idx}
+	</delete>
+	
+	<select id="getEssayQuestionBySuiteid" resultType="com.extr.domain.exam.EssayQuestion" parameterType="int">
+		select * from essay_questions where suite_id = #{id}
+	</select>
+	
+	<select id="getEssayContentBySuiteid" resultType="com.extr.domain.exam.EssayContent" parameterType="int">
+		select * from essay_contents where suite_id = #{id}
+	</select>
+	
+	<insert id="insertEssayContent"  parameterType="com.extr.domain.exam.EssayContent">
+		insert into essay_contents (suite_id,text) values(#{suite_id},#{text})
+	</insert>
+	
+	<update id="updateEssayContent"  parameterType="com.extr.domain.exam.EssayContent">
+		update essay_contents set text = #{text} where suite_id=#{suite_id}
+	</update>
+	
+	<delete id="deleteEssayQuestionByid" parameterType="int">
+		delete from essay_questions where id = #{id}
+	</delete>
+	
+	<update id="updateEssayQuestionByid" parameterType="com.extr.domain.exam.EssayQuestion">
+		update essay_questions set text = #{text}, answer =#{answer} ,score = #{score} where id = #{id}
+	</update>
+	
+	<insert id = "insertEssayQuestion" parameterType="com.extr.domain.exam.EssayQuestion">
+		insert into essay_questions(suite_id,order_no,text,answer,score) values(#{suite_id},#{order_no},#{text},#{answer},#{score})
+	</insert>
+	
+	<insert id = "insertChapterRocord">
+		insert into web_user_exam (flag,cate,uid,cid,cpath,no,time_limit,time_used,score,add_date, time_start) values (#{flag},#{cate},#{uid},#{cid},#{cpath},#{no},#{time_limit},#{time_used},#{score},#{add_date}, #{time_start})       
+	</insert>
+	<select id="getTestColumn" resultType="com.extr.domain.exam.ColumnContent" parameterType="string">
+		select cc.id as id, CONCAT(c.title , cc.title )as title from web_course_chapter as cc inner join web_course as c on c.id=cc.iid where cc.cate=4
+		
+		<if test="path != null"> and c.path=#{path} </if>
+	</select>
+	<select id="getFinalColumn" resultType="com.extr.domain.exam.ColumnContent" parameterType="string">
+		select id, CONCAT(name,"结业考试") as title from test_types where 1=1 	
+		<if test="path != null"> and major_id=#{path} </if>
+	</select>
+	
+	<select id="getTestScore" resultType="com.extr.domain.exam.ExamItem">
+		select score,time_start as startTime from web_user_exam where uid=#{userid} and cpath=#{cpath} order by score desc limit 1
+	</select>
+	
+	<select id="getFinalScore" resultType="com.extr.domain.exam.ExamItem">
+	
+	SELECT score,start_time as startTime FROM final_tests where user_id=#{userid} AND finished=1 AND mock_test=0 AND test_type_id=#{finaltestid} order by score desc limit 1
+	</select>
+</mapper>

@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.extr.persistence.ContentMapper">
+
+	<!-- Content -->
+	
+	<!-- 专业管理 -->
+	<select id="selectProfessionalManagement" resultType="com.extr.domain.content.ProfessionalManagement">
+		SELECT * FROM web_path ORDER BY ord 
+	</select>
+	
+	<select id="selectMaxOrdByModule" resultType="int">
+		SELECT MAX(ord) FROM web_path WHERE module=#{module} ORDER BY ord
+	</select>
+	
+	<insert id="insertProfessionalManagement" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.content.ProfessionalManagement">
+		INSERT INTO
+		web_path(path,deep,ord,module,title,valid)
+		VALUES
+		(#{path},#{deep},#{ord},#{module},#{title},#{valid})
+	</insert>
+	
+	<update id="updateProfessionalManagementById" parameterType="com.extr.domain.content.ProfessionalManagement">
+		update web_path 
+		SET path=#{path}, deep=#{deep}, ord=#{ord}, module=#{module}, title=#{title}, valid=#{valid}
+		WHERE id=#{id}
+	</update>
+	
+	<delete id="deleteProfessionalManagementById" parameterType="int">
+		DELETE FROM web_path WHERE id=#{id}
+	</delete>
+	
+	<!-- 课程管理 -->
+	<select id="selectClassManagementList" resultType="com.extr.domain.content.ClassManagement">
+		SELECT distinct b.id, b.*, a.title as pmTitle,a.id AS pid 
+		FROM web_path a JOIN web_course b ON a.id = CONVERT(SUBSTRING(b.path,3),SIGNED)
+		where 1=1 
+		<if test="path !=null">and path = #{path}</if>	
+		ORDER BY  b.no asc
+	</select>
+	
+	<insert id="insertClassManagement" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.content.ClassManagement">
+		INSERT INTO
+		web_course(uid,state,no,path,title,xueshi,xuefen,date_limit,cost,text,add_date)
+		VALUES
+		(#{uid},#{state},#{no},#{path},#{title},#{xueshi},#{xuefen},#{date_limit},#{cost},#{text},#{add_date})
+	</insert>
+	
+	<update id="updateClassManagement" parameterType="com.extr.domain.content.ClassManagement">
+		update web_course 
+			<set>
+	
+			<if test="path != null">path=#{path},</if>
+			<if test="no != null">no=#{no},</if>
+			
+			<if test="pmTitle != null">pmTitle=#{pmTitle},</if>
+			<if test="title != null">title=#{title},</if>
+			<if test="state != null">state=#{state},</if>
+			<if test="text != null">text=#{text},</if>
+			<if test="xueshi != -1">xueshi=#{xueshi},</if>
+			<if test="xuefen != -1">xuefen=#{xuefen},</if>
+			<if test="date_limit != -1">date_limit=#{date_limit},</if>
+			<if test="cost != -1">cost=#{cost},</if>
+			<if test="add_date != -1">add_date=#{add_date},</if>
+		</set>
+	
+		<where>
+			id=#{id}
+		
+		</where>
+	
+	
+	</update>
+	
+	
+	<delete id="deleteClassManagementById" parameterType="int">
+		DELETE FROM web_course WHERE id=#{id}
+	</delete>
+	<!-- 章节设置 -->
+	<select id="selectClassChapterList" resultType="com.extr.domain.content.ClassChapter">
+		SELECT * FROM web_course_chapter WHERE 1=1 
+		<if test="iid != -1">
+			AND iid=#{iid}
+		</if>
+		 AND cate=#{cate} ORDER BY id
+	</select>
+	
+	<insert id="insertClasschapter" parameterType="com.extr.domain.content.ClassChapter">
+		INSERT INTO web_course_chapter(cate,iid,path,ord,deep,title,ppt_url,video_url,video_url1,text,exam_set,duration) 	
+		values (#{cate},#{iid},#{path},#{ord},#{deep},#{title},#{ppt_url},#{video_url},#{video_url1},#{text},#{exam_set},#{duration})
+	</insert>
+	
+	<update id="updateClasschapter" parameterType="com.extr.domain.content.ClassChapter">
+		update web_course_chapter 
+			<set>
+		
+			<!-- <if test="user.id != 0">id=#{user.id},</if> -->
+			<if test="cate != null">cate=#{cate},</if>
+			<if test="iid != null">iid=#{iid},</if>
+			<if test="path != null">path=#{path},</if>
+			<if test="ord != null">ord=#{ord},</if>
+			
+			<if test="deep != null">deep=#{deep},</if>
+			<if test="title != null">title=#{title},</if>
+			<if test="ppt_url != null">ppt_url=#{ppt_url},</if>
+			
+			<if test="video_url != null">video_url=#{video_url},</if>
+			<if test="video_url1 != null">video_url1=#{video_url1},</if>
+			<if test="text != null">text=#{text},</if>
+			<if test="exam_set != null">exam_set=#{exam_set},</if>
+			<if test="duration != null">duration=#{duration},</if>
+		</set>
+	
+	<where>
+			id=#{id}
+		
+		</where>
+	</update>
+	
+	<delete id="deleteClassChapterById" parameterType="int">
+		DELETE FROM web_course_chapter WHERE id=#{id}
+	</delete>
+	
+	<!-- 内容维护：题库管理 -->
+	<select id="selectQuestionsManagementList" resultType="com.extr.domain.content.QuestionsManagement">
+		SELECT * FROM web_exam 
+		WHERE 1=1
+		<if test="cate != null"> AND cate=#{cate}</if>
+		<if test="cid != -1">AND cid =#{cid}</if>
+		<if test="title != null">AND title LIKE "%"#{title}"%"</if>
+		<if test="cpath != null">AND cpath=#{cpath}</if>
+		<if test="type != null">AND type=#{type}</if>
+		ORDER BY add_date desc
+	</select>
+	<select id="getQuestionsCounts" resultType="int">
+		SELECT count(*) FROM web_exam 
+		WHERE 1=1
+		<if test="cate != null"> AND cate=#{cate}</if>
+		<if test="cid != -1">AND cid =#{cid}</if>
+		<if test="title != null">AND title LIKE "%"#{title}"%"</if>
+		<if test="cpath != null">AND cpath=#{cpath}</if>
+		<if test="type != null">AND type=#{type}</if>
+		ORDER BY add_date desc
+	</select>
+	
+	<!-- 新增题库管理记录 -->
+	<insert id="insertQuestionsManagement" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.content.QuestionsManagement">
+		INSERT INTO
+		web_exam(uid,cate,cid,ccid,type,title,op1,op2,op3,op4,answer,
+		add_date,score,remark,cpath,zl,anli_id)
+		VALUES
+		(#{uid},#{cate},#{cid},#{ccid},#{type},#{title},#{op1},#{op2},#{op3},#{op4},#{answer},
+		#{add_date},#{score},#{remark},#{cpath},#{zl},#{anli_id})
+	</insert>
+	<!-- 更新图库记录 -->
+	<update id="updateQuestionsManagement" parameterType="com.extr.domain.content.QuestionsManagement">
+		update web_exam 
+			<set>
+		
+			<!-- <if test="user.id != 0">id=#{user.id},</if> -->
+			<if test="uid != null">uid=#{uid},</if>
+			<if test="cate != null">cate=#{cate},</if>
+			<if test="cid != null">cid=#{cid},</if>
+			<if test="ccid != null">ccid=#{ccid},</if>
+			
+			<if test="type != null">type=#{type},</if>
+			<if test="title != null">title=#{title},</if>
+			<if test="op1 != null">op1=#{op1},</if>
+			
+			<if test="op2 != null">op2=#{op2},</if>
+			<if test="op3 != null">op3=#{op3},</if>
+			<if test="op4 != null">op4=#{op4},</if>
+			<if test="answer != null">answer=#{answer},</if>
+			<if test="add_date != null">add_date=#{add_date},</if>
+			
+			<if test="score != null">score=#{score},</if>
+			<if test="remark != null">remark=#{remark},</if>
+			<if test="cpath != null">cpath=#{cpath},</if>
+			<if test="zl != null">zl=#{zl},</if>
+			<if test="anli_id != null">anli_id=#{anli_id},</if>
+			
+		</set>
+	
+	<where>
+			id=#{id}
+		
+		</where>
+	</update>
+	<!-- 删除题库管理记录 -->
+	<delete id="deleteQuestionsManagementById" parameterType="int">
+		DELETE FROM web_exam WHERE id=#{id}
+	</delete>
+	
+	<!-- 内容维护：鉴定辅助列表查询 -->
+	<select id="selectAppraisalList" resultType="com.extr.domain.content.Appraisal">
+		SELECT * FROM web_jianding 
+		WHERE 1=1
+		<if test="path!=null">ANd path=#{path}</if>
+		<if test="state!=null">ANd state=#{state}</if>
+		<if test="title != null">AND title LIKE "%"#{title}"%"</if>
+		<if test="no != null">AND no=#{no}</if>
+		ORDER BY id
+	</select>
+	<!-- 新增鉴定辅助记录 -->
+	<insert id="insertAppraisal" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.content.Appraisal">
+		INSERT INTO
+		web_jianding(uid,no,path,title,add_date,state)
+		VALUES
+		(#{uid},#{no},#{path},#{title},#{add_date},#{state})
+	</insert>
+	<!-- 修改鉴定辅助 -->
+	<update id="updateAppraisalById" parameterType="com.extr.domain.content.Appraisal">
+		update web_jianding
+		<set>
+			<if test="uid != 0">uid=#{uid},</if>
+			<if test="no != null">no=#{no},</if>
+			<if test="path != null">path=#{path},</if>
+			<if test="title != null">title=#{title},</if>
+			<if test="add_date != 0">add_date=#{add_date},</if>
+			<if test="state != null">state=#{state}</if>
+		</set>
+		WHERE id=#{id}
+	</update>
+	<!-- 删除鉴定辅助 -->
+	<delete id="deleteAppraisalById" parameterType="int">
+		DELETE FROM web_jianding WHERE id=#{id}
+	</delete>
+	
+	<!-- 模块管理 -->
+		<select id="selectModuleManagementList" resultType="com.extr.domain.content.ModuleManagement">
+		SELECT id,name,module,paths FROM web_user_channel 
+	</select>
+	
+	<update id="updateModule" parameterType= "com.extr.domain.content.ModuleManagement">
+		update web_user_channel set paths = #{paths} where id = #{id}
+	</update>
+	<!-- 鉴定辅助：节点设置列表查询 -->
+	<select id="selectAppraisalNodesList" resultType="com.extr.domain.content.Appraisal">
+		SELECT * FROM web_jianding_node WHERE iid=#{iid} ORDER BY ord
+	</select>
+	<!-- 鉴定辅导：新增节点设置记录 -->
+	<insert id="insertAppraisalNodes" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.content.AppraisalNodes">
+		INSERT INTO
+		web_jianding_node(iid,ord,path,deep,title,ppt_url,video_url,text,video_url1,attachment)
+		VALUES
+		(#{iid},#{ord},#{path},#{deep},#{title},#{ppt_url},#{video_url},#{text},#{video_url1},#{attachment})
+	</insert>
+	<!-- 节点设置表顺序号查询；取当前表里最大值 -->
+	<select id="getAppraisalNodesMaxOrd" resultType="int">
+		SELECT MAX(ord) FROM web_jianding_node
+	</select>
+	<!-- 鉴定辅助：修改节点设置记录 -->
+	<update id="updateAppraisalNodesById" parameterType="com.extr.domain.content.AppraisalNodes">
+		update web_jianding_node
+		<set>
+			<if test="iid != 0">iid=#{iid},</if>
+			<if test="ord != 0">ord=#{ord},</if>
+			<if test="path != null">path=#{path},</if>
+			<if test="deep != 0">deep=#{deep},</if>
+			<if test="title != null">title=#{title},</if>
+			<if test="ppt_url != null">ppt_url=#{ppt_url},</if>
+			<if test="video_url != null">video_url=#{video_url},</if>
+			<if test="text != null">text=#{text},</if>
+			<if test="video_url1 != null">video_url1=#{video_url1},</if>
+			<if test="attachment != null">attachment=#{attachment}</if>
+		</set>
+		WHERE id=#{id}
+	</update>
+	<!-- 鉴定辅助：删除节点设置记录 -->
+	<delete id="deleteAppraisalNodesById" parameterType="int">
+		DELETE FROM web_jianding_node WHERE id=#{id}
+	</delete>
+	
+	
+	<!-- 试听课程列表查询 -->
+	<select id="getTryClassList" resultType="com.extr.domain.content.ClassChapter">
+		SELECT * FROM web_course_chapter WHERE cate="9"
+	</select>
+	
+	
+	
+</mapper>

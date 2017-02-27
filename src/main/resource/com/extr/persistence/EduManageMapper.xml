@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.extr.persistence.EduManageMapper">
+
+	<!-- 远程教育平台：主菜单 -->
+	<select id="getMainMenuList" resultType="com.extr.domain.edu.EduMainMenu">
+		SELECT * FROM web_user_channel	ORDER BY id
+	</select>
+	
+	<!-- 远程教育平台：作业与考试列表   编号 课程名称  章节测试   单科考试 -->
+	<select id="getWorkAndExamList" resultType="com.extr.domain.edu.WorkAndExam">
+	
+	select * from web_course a join web_course_chapter b on a.id = b.iid where b.cate =4 and a.path=#{path} 
+	
+		<!-- select * from web_course where path=#{path}
+		SELECT a.`no`, a.title, b.* FROM web_course a JOIN web_user_course b ON a.id=b.cid
+		WHERE b.uid=#{userId}
+		<if test="path != null">AND a.path=#{path}</if>
+		ORDER BY b.cid -->
+	</select>
+	<insert id="insertWebUserCourse" useGeneratedKeys="true" keyProperty="id" parameterType="com.extr.domain.edu.WorkAndExam">
+		insert web_user_course (state,uid,cid,date_start,path,add_date,duration) values (#{state},#{uid},#{cid},#{date_start},#{path},#{add_date},#{duration})
+	</insert>
+	<!-- 远程教育平台：作业与考试：章节测试列表查询 -->
+	<select id="getChapterExamList" resultType="com.extr.domain.edu.ChapterExam">
+		SELECT b.id as chapterId, b.title as chapterTitle, a.cid as courseId, a.cpath,b.duration, max(a.score) as maxScore FROM web_user_exam a 
+		JOIN web_course_chapter b ON a.cid=b.iid AND cast((SUBSTR(cpath, 3)) as SIGNED)=b.id
+		WHERE a.uid=#{userId} AND b.cate=#{cate} AND a.cid=#{cid}
+		GROUP BY a.cpath 
+		ORDER BY a.cid, a.cpath
+	</select>
+	<select id="getChapterExamResult" resultType="com.extr.domain.edu.ChapterExam">
+		SELECT b.id as chapterId, b.title as chapterTitle, a.cid as courseId, a.cpath,b.duration, max(a.score) as maxScore FROM web_user_exam a 
+		JOIN web_course_chapter b ON a.cid=b.iid AND cast((SUBSTR(cpath, 3)) as SIGNED)=b.id
+		WHERE a.uid=#{userId} AND b.cate=#{cate} AND a.cid in 
+		
+	   <foreach collection="cids" index="index" item="item" open=" (" separator="," close=")"> 
+      	  #{item}
+      </foreach>
+		
+		GROUP BY a.cpath 
+		ORDER BY a.cid, a.cpath
+	</select>
+	<!-- 远程教育平台：作业与考试：章节测试列表查询 -->
+	<select id="getDiffChapterTestList" resultType="com.extr.domain.edu.DiffChapterTest">
+		SELECT a.`no`,c.* FROM web_user_exam a 
+		JOIN web_course_chapter b ON cast((SUBSTR(a.cpath, 3)) as SIGNED)=b.id
+		JOIN web_user_exam_detail c ON a.id=c.iid
+		WHERE a.uid=#{userId} AND a.cid=#{cid} AND b.cate=#{cate}
+		<if test="iid != -1">AND c.iid=#{iid}</if>
+		<if test="no != null">AND a.no=#{no}</if>
+		ORDER BY a.cid,a.cpath,b.ord;
+	</select>
+	<select id="getChapterTestListById" resultType="com.extr.domain.edu.DiffChapterTest">		
+		SELECT a.*,b.*,c.name as username from web_user_exam a join web_user_exam_detail b on a.id=b.iid join web_user c on a.uid =c.id where a.no = #{no}
+	</select>
+	<!-- 远程教育平台：作业与考试：章节测试：抽取考题 -->
+	<select id="extractExam" resultType="com.extr.domain.edu.ExtractExam">
+		SELECT a.cid,a.type,a.title,a.op1,a.op2,a.op3,a.op4,
+		a.answer,a.add_date,a.cpath,
+		b.exam_set,b.duration FROM web_exam a 
+		JOIN web_course_chapter b ON cast((SUBSTR(a.cpath, 3)) as SIGNED)=b.id
+		WHERE cid=#{cid}  AND type IN (2, 3) 
+		<if test="cpath != null"> and cpath=#{cpath} </if>
+		
+		
+		ORDER BY a.cid,a.cpath;
+	</select>
+	<!-- 远程教育平台：作业与考试：章节测试：抽取考题 -->
+	<select id="extractExamDK" resultType="com.extr.domain.edu.ExtractExam">
+		SELECT a.cid,a.type,a.title,a.op1,a.op2,a.op3,a.op4,
+		a.answer,a.add_date,a.cpath,
+		b.exam_set,b.duration FROM web_exam a 
+		JOIN web_course_chapter b on a.cid =b.iid where b.id =#{id}			
+		ORDER BY a.cid,a.cpath;
+	</select>
+	
+	
+	<!-- 远程教育平台：作业与考试：章节测试：新增考卷 -->
+	<insert id="insertExamUserExam" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.edu.ExamUserExam">
+		INSERT INTO
+		web_user_exam(flag,cate,uid,cid,cpath,no,time_limit,
+		time_used,score,add_date,time_start)
+		VALUES
+		(#{flag},#{cate},#{uid},#{cid},#{cpath},#{no},#{time_limit},
+		#{time_used},#{score},#{add_date},#{time_start})
+	</insert>
+	
+	<!-- 远程教育平台：作业与考试：章节测试：查询考卷 -->
+	<select id="selectExamUserExamById" resultType="com.extr.domain.edu.ExamUserExam">
+		SELECT * FROM web_user_exam WHERE id=#{id}
+	</select>
+	
+	<!-- 远程教育平台：作业与考试：章节测试：新增考题 -->
+	<insert id="insertExamUserExamDetail" parameterType="java.util.List">
+		<selectKey keyProperty="id" order="BEFORE" resultType="java.lang.Integer">  
+		      SELECT LAST_INSERT_ID()  
+		</selectKey> 
+		INSERT INTO
+		web_user_exam_detail(iid,ord,sub_type,sub_title,sub_op1,sub_op2,sub_op3,sub_op4,
+		sub_answer,sub_score,answer,sub_remark,tip)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">  
+	        (#{item.iid}, #{item.ord}, #{item.sub_type}, #{item.sub_title},  
+	        #{item.sub_op1}, #{item.sub_op2}, #{item.sub_op3}, #{item.sub_op4}, 
+	        #{item.sub_answer}, #{item.sub_score}, #{item.answer}, #{item.sub_remark}, #{item.tip})
+	    </foreach>  
+	</insert>
+	
+	<!-- 作业与考试：章节测试||单科考试：交卷 -->
+	<update id="submitDiffChapterTest" parameterType="com.extr.domain.edu.ExamUserExam">
+		update web_user_exam SET score=#{score} WHERE uid=#{uid} AND no=#{no}
+	</update>
+	
+	<!-- 远程教育平台：模拟考试：考试类型列表 -->
+	<select id="getMockExamTypeList" resultType="com.extr.domain.edu.TestTypes">	
+		SELECT  a.* from test_types a where major_id =#{userId} and enabled = 1
+	</select>
+	
+	<select id="getScores" resultType="com.extr.domain.edu.Score">
+		SELECT DISTINCT(test_type_id) as test_type_id,max(a.score) as score from final_tests a join test_types b on a.test_type_id = b.id where user_id =#{userId} and b.major_id =#{special} GROUP BY test_type_id
+	</select>
+	
+	<!-- 远程教育平台：模拟考试：查询模拟考试试卷 -->
+	<select id="getExamSuites" resultType="com.extr.domain.edu.ExamSuites">
+		SELECT b.`name` as examType, a.* FROM suites a
+		JOIN test_types b ON a.test_type_id=b.id
+		WHERE a.test_type_id=#{testTypeId} AND a.enabled=#{enabled} 
+		AND a.is_real=#{is_real} AND a.is_mock=#{is_mock};
+	</select>
+	<!-- 远程教育平台：模拟考试：获取选择题 -->
+	<select id="selectChoiceQuestions" resultType="com.extr.domain.edu.ChoiceQuestions">
+		SELECT * FROM choice_questions WHERE suite_id=#{suitesId};
+	</select>
+	<!-- 远程教育平台：模拟考试：获取案例分析题 -->
+	<select id="selectCaseQuestions" resultType="com.extr.domain.edu.CaseQuestions">
+		SELECT * FROM case_questions WHERE suite_id=#{suitesId} ORDER BY order_no;
+	</select>
+	<!-- 远程教育平台：模拟考试：获取案例分析题 子集 -->
+	<select id="selectCaseSubQuestions" resultType="com.extr.domain.edu.CaseSubQuestions">
+		SELECT * FROM case_sub_questions WHERE case_question_id=#{case_question_id} ORDER BY idx;
+	</select>
+	<!-- 远程教育平台：模拟考试：获取问答题  -->
+	<select id="selectEssayContents" resultType="com.extr.domain.edu.EssayContents">
+		SELECT * FROM essay_contents WHERE suite_id=#{suitesId} ORDER BY id;
+	</select>
+	<!-- 远程教育平台：模拟考试：获取问答题 子集 -->
+	<select id="selectEssayQuestions" resultType="com.extr.domain.edu.EssayQuestions">
+		SELECT * FROM essay_questions WHERE suite_id=#{suitesId} ORDER BY order_no;
+	</select>
+	
+	
+	<!-- 模拟考试&结业考试：保存个人交卷记录 -->
+	<insert id="insertFinalTests" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.edu.FinalTests">
+		INSERT INTO
+		final_tests(user_id,test_type_id,test_suite_id,finished,
+					start_time,end_time,score,question_count,mock_test)
+		VALUES
+		(#{user_id},#{test_type_id},#{test_suite_id},#{finished},
+		#{start_time},#{end_time},#{score},#{question_count},#{mock_test})
+	</insert>
+	<!-- 模拟考试&结业考试：保存个人交卷时间 -->
+	<insert id="insertFinalAnswerSheets" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.edu.FinalAnswerSheets">
+		INSERT INTO	final_answer_sheets(final_test_id,submit_time)
+		VALUES (#{final_test_id},#{submit_time})
+	</insert>
+	<!-- 模拟考试&结业考试：保存个人交卷答案 -->
+	<insert id="insertFinalAnswers" parameterType="java.util.List">
+		<selectKey keyProperty="id" order="BEFORE" resultType="java.lang.Integer">  
+		      SELECT LAST_INSERT_ID()  
+		</selectKey> 
+		INSERT INTO	final_answers(final_answer_sheet_id,idx,question_id,answer_text)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">  
+	        (#{item.final_answer_sheet_id}, #{item.idx}, #{item.question_id}, #{item.answer_text})
+	    </foreach>  
+	</insert>
+		<!-- 学业申请：个人列表查询 -->
+	<select id="getMyApplyList" resultType="com.extr.domain.student.StudentApply">
+		SELECT * FROM web_user_apply WHERE userid=#{userId} ORDER BY id
+	</select>
+	
+	<insert id="submitApply" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.student.StudentApply">
+		INSERT INTO	web_user_apply(applystate,startdate,enddate,applydate,approve,userid,comment)
+		VALUES (#{applystate},#{startdate},#{enddate},#{applydate},#{approve},#{userid},#{comment})
+	</insert>
+	
+	<select id="getFinalScore" resultType="com.extr.domain.edu.FinalTest">
+		SELECT MAX(score) as score, a.test_type_id as testTypeId FROM final_tests a where user_id =#{userid} GROUP BY test_type_id
+	</select>
+	
+	<update id="updateExamAnswer" parameterType="com.extr.domain.exam.Answer">
+        update web_user_exam_detail set sub_answer = #{answer} where iid = #{iid} and ord = #{ord}
+	</update>
+	
+</mapper>
+
+
+
+
+

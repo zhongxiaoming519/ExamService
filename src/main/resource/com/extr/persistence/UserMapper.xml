@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.extr.persistence.UserMapper">
+
+	<!-- User -->
+	<insert id="insertUser" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.user.User">
+		insert into
+		et_user(username,password,email,phone,add_date,expire_date,add_by,enabled,truename,field_id,province,company,department)
+		value
+		(#{username},#{password},#{email},#{phone},#{create_date},#{expire_date},#{creator},#{enabled},#{truename},#{fieldId},#{province},#{company},#{department})
+	</insert>
+	<update id="updateUser" parameterType="com.extr.domain.user.User">
+		update web_user
+		<set>
+
+			
+			<!-- <if test="user.id != 0">id=#{user.id},</if> -->
+			<if test="user.live != null">live=#{user.live},</if>
+			<if test="user.gid != 0">gid=#{user.gid},</if>
+			<if test="user.username != null">username=#{user.username},</if>
+			<if test="user.password != null">password=#{user.password},</if>
+			<if test="user.passwordQuestion != null">password_question=#{user.passwordQuestion},</if>
+			<if test="user.passwordAnswer != null">password_answer=#{user.passwordAnswer},</if>
+			<if test="user.name != null">name=#{user.name},</if>
+			<if test="user.gender != null">gender=#{user.gender},</if>
+			<if test="user.phone != null">phone=#{user.phone},</if>
+			<if test="user.email != null">email=#{user.email},</if>
+			<if test="user.cellphone!= null">cellphone=#{user.cellphone},</if>
+			<if test="user.zjlx!= null">zjlx=#{user.zjlx},</if>
+			<if test="user.zjhm!= null">zjhm=#{user.zjhm},</if>
+			<if test="user.city!= null">city=#{user.city},</if>
+			<if test="user.addr!= null">addr=#{user.addr},</if>
+			<if test="user.postcode!= null">postcode=#{user.postcode},</if>
+			<if test="user.birthday!= null">birthday=#{user.birthday},</if>
+			<if test="user.remark!= null">remark=#{user.remark},</if>
+			<if test="user.unit!= null">unit=#{user.unit},</if>
+			<if test="user.add_Date!= 0">add_date=#{user.add_Date},</if>
+			<if test="user.postcode!= null">postcode=#{user.postcode},</if>
+			<if test="user.birthday!= null">birthday=#{user.birthday},</if>
+			<if test="user.lastactivity!= 0">lastactivity=#{user.lastactivity},</if>
+			<if test="user.uid!= 0">uid=#{user.uid},</if>
+			<if test="user.state!= null">state=#{user.state},</if>
+			<if test="user.userType!= null">user_type=#{user.userType},</if>
+			<if test="user.province!= null">province=#{user.province},</if>
+			<if test="user.special!= null">special=#{user.special},</if>
+			<if test="user.signSpecial!= null">sign_special=#{user.signSpecial},</if>
+			<if test="user.signClass!= null">sign_class=#{user.signClass},</if>
+			<if test="user.haveClass!= null">have_class=#{user.haveClass},</if>
+			<if test="user.haveClassDate!= 0">have_class_date=#{user.haveClassDate},</if>
+			<if test="user.aspid!= null">aspid=#{user.aspid},</if>
+			<if test="user.duration!= 0">duration=#{user.duration},</if>
+			<if test="user.isExtendUser!= 0">is_extend_user=#{user.isExtendUser},</if>
+			<if test="user.lastModify!= 0">last_modify=#{user.lastModify},</if>
+			<if test="user.duration!= 0">duration=#{user.duration},</if>
+			<if test="user.isTempUser!= 0">is_temp_user=#{user.isTempUser},</if>
+			<if test="user.graduateDate!= 0">graduate_date=#{user.graduateDate},</if>
+			<if test="user.regEnd!= 0">reg_end=#{user.regEnd},</if>
+			<if test="user.isTempUser!= 0">is_temp_user=#{user.isTempUser},</if>
+			<if test="user.isGraduated!= 0">is_graduated=#{user.isGraduated}</if>
+	
+		</set>
+		<where>
+			1=1
+			<if test="user.username != null"> and username=#{user.username}</if>
+			<if test="user.id != 0"> and id=#{user.id}</if>
+			
+			<if test="oldpassword != null">
+				and password=#{oldpassword}
+			</if>
+		</where>
+	</update>
+	<update id="updateRUserRole" parameterType = "int">
+		update exam_r_user_role set role_id = #{roleid} 
+		<where>
+			user_id = #{userid}
+		</where>
+	
+	</update>
+	<delete id="deleteUser" parameterType="com.extr.domain.user.User">
+		delete from et_user where
+		id=#{id}
+	</delete>
+	<select id="getUserById" resultType="com.extr.domain.user.User">
+			SELECT
+		`id`,
+		`live`,
+		`gid`,
+		`username`,
+		`password`,
+		`password_question` AS passwordQuestion,
+		`password_answer` AS passwordAnswer,
+		`name`,
+		`gender`,
+		phone,
+		`email`,
+		`cellphone`,
+		`zjlx`,
+		`zjhm`,
+		`city`,
+		`addr`,
+		`postcode`,
+		`birthday`,
+		`remark`,
+		`add_date` AS add_Date,
+		`reg_date` AS regDate,
+		`lastactivity`,
+		`uid`,
+		`state`,
+		`user_type` AS userType,
+		`province`,
+		`education`,
+		`special`,
+		`sign_special` AS signSpecial,
+		`sign_class` AS signClass,
+		`have_class` AS haveClass,
+		`have_class_date` AS haveClassDate,
+		`aspid`,
+		`duration`,
+		`is_extend_user` AS isExtendUser,
+		`last_modify` AS
+		lastModify,
+		`is_temp_user` AS isTempUser,
+		`graduate_date` AS
+		graduateDate,
+		`reg_end` AS regEnd,
+		`unit`,
+		`is_graduated` AS isGraduated
+		FROM
+		web_user a
+		WHERE id = #{userid}
+	</select>
+	<select id="getUserByName" resultType="com.extr.domain.user.User">
+
+		SELECT
+		`id`,
+		`live`,
+		`gid`,
+		`username`,
+		`password`,
+		`password_question` AS passwordQuestion,
+		`password_answer` AS passwordAnswer,
+		`name`,
+		`gender`,
+		phone,
+		`email`,
+		`cellphone`,
+		`zjlx`,
+		`zjhm`,
+		`city`,
+		`addr`,
+		`postcode`,
+		`birthday`,
+		`remark`,
+		`add_date` AS add_Date,
+		`reg_date` AS regDate,
+		`lastactivity`,
+		`uid`,
+		`state`,
+		`user_type` AS userType,
+		`province`,
+		`education`,
+		`special`,
+		`sign_special` AS signSpecial,
+		`sign_class` AS signClass,
+		`have_class` AS haveClass,
+		`have_class_date` AS haveClassDate,
+		`aspid`,
+		`duration`,
+		`is_extend_user` AS isExtendUser,
+		`last_modify` AS
+		lastModify,
+		`is_temp_user` AS isTempUser,
+		`graduate_date` AS
+		graduateDate,
+		`reg_end` AS regEnd,
+		`unit`,
+		`is_graduated` AS isGraduated ,(SELECT sum(b.enddate-b.startdate) as span from web_user_period b where b.uid=a.id and (b.state = 'x' or b.state='e') ) as span
+		FROM
+		web_user a
+		WHERE username = #{username}
+
+	</select>
+	<select id="getUserByState" resultType="com.extr.domain.user.User">
+
+		SELECT
+		`id`,
+		`live`,
+		`gid`,
+		`username`,
+		`password`,
+		`password_question` AS passwordQuestion,
+		`password_answer` AS passwordAnswer,
+		`name`,
+		`gender`,
+		phone,
+		`email`,
+		`cellphone`,
+		`zjlx`,
+		`zjhm`,
+		`city`,
+		`addr`,
+		`postcode`,
+		`birthday`,
+		`remark`,
+		`add_date` AS add_Date,
+		`reg_date` AS regDate,
+		`lastactivity`,
+		`uid`,
+		`state`,
+		`user_type` AS userType,
+		`province`,
+		`education`,
+		`special`,
+		`sign_special` AS signSpecial,
+		`sign_class` AS signClass,
+		`have_class` AS haveClass,
+		`have_class_date` AS haveClassDate,
+		`aspid`,
+		`duration`,
+		`is_extend_user` AS isExtendUser,
+		`last_modify` AS
+		lastModify,
+		`is_temp_user` AS isTempUser,
+		`graduate_date` AS
+		graduateDate,
+		`reg_end` AS regEnd,
+		`unit`,
+		`is_graduated` AS isGraduated
+		FROM
+		web_user
+		WHERE state = #{state}
+
+	</select>
+	
+	
+	<select id="getAllUserList" resultType="com.extr.domain.user.User">
+		select a.id as
+		id,a.username as username,a.truename as truename,
+		a.`password` as
+		`password`,a.email as email,a.phone as phone,
+		a.add_date as
+		create_date,a.expire_date as expire_date,b.username as creator,(select
+		field_name from et_field where field_id=a.field_id) as fieldName,
+		a.enabled as enabled,province,company,department from et_user a LEFT
+		JOIN et_user b on
+		a.add_by=b.id order by a.id
+	</select>
+	<insert id="insertRole" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.user.Role">
+		insert into web_usergroup(authority,name,code,priv,add_date) value
+		(#{authority},#{name},#{code},#{priv},#{add_date})
+	</insert>
+	<update id="updateRole" parameterType="com.extr.domain.user.Role">
+		update web_usergroup
+		<set>
+			<if test="authority != null">authority=#{authority},</if>
+			<if test="name != null">name=#{name},</if>
+			<if test="code != null">code=#{code},</if>
+			<if test="priv != null">priv=#{priv},</if>
+			<if test="add_date != 0">add_date=#{add_date}</if>
+		</set>
+		where id = #{id}
+	</update>
+	<delete id="deleteRole" parameterType="com.extr.domain.user.Role">
+		delete from web_usergroup where
+		id=#{id}
+	</delete>
+	<select id="getAllRoleList" resultType="com.extr.domain.user.Role">
+		select * from web_usergroup
+	</select>
+	<insert id="grantUserRole">
+		insert into et_r_user_role(user_id,role_id) value
+		(#{user_id},#{role_id})
+	</insert>
+	<select id="getUserListByRoleId" resultType="com.extr.domain.user.User">
+		SELECT
+		`id`,
+		`live`,
+		`gid`,
+		`username`,
+		`password`,
+		`password_question` AS
+		passwordQuestion,
+		`password_answer` AS passwordAnswer,
+		`name`,
+		`gender`,
+		`phone`,
+		`email`,
+		`cellphone`,
+		`zjlx`,
+		`zjhm`,
+		`city`,
+		`addr`,
+		`postcode`,
+		`birthday`,
+		`remark`,
+		`add_date` AS add_Date,
+		`reg_date` AS regDate,
+		`lastactivity`,
+		`uid`,
+		`state`,
+		`user_type` AS userType,
+		`province`,
+		`education`,
+		`special`,
+		`sign_special` AS signSpecial,
+		`sign_class` AS
+		signClass,
+		`have_class` AS haveClass,
+		`have_class_date` AS
+		haveClassDate,
+		`aspid`,
+		`duration`,
+		`is_extend_user` AS isExtendUser,
+		`last_modify` AS lastModify,
+		`is_temp_user` AS isTempUser,
+		`graduate_date` AS graduateDate,
+		`reg_end` AS regEnd,
+		`unit`,
+		`is_graduated` AS isGraduated,
+		(SELECT
+		username
+		FROM
+		web_user m
+		WHERE m.id
+		= a.uid) AS creator,
+		b.role_id as roleId
+		FROM
+		web_user a,
+		exam_r_user_role b where a.user_type=1
+		
+			<if test="role_id!=null and role_id!='' and role_id!=-1">
+				and a.id = b.user_id
+				AND
+				b.role_id=#{role_id}
+			</if>
+			<if test="role_id==-1">
+				and a.id = b.user_id
+			</if>
+		ORDER BY reg_date desc
+	</select>
+	<select id="getRoleListByUserId" resultType="com.extr.domain.user.Role">
+		select c.* from
+		web_user a,exam_r_user_role b,web_usergroup c
+		where a.id=b.user_id and
+		b.role_id=c.id and a.id=#{user_id}
+		order by c.name
+	</select>
+	<delete id="deleteUserRoleByUserId">
+		delete from et_r_user_role where user_id=#{user_id}
+	</delete>
+	<select id="getauthoritylist"  resultType="com.extr.domain.user.Role">
+		select * from web_usergroup where id = #{id}
+	</select>
+	
+	<select id ="getUserList" resultType="com.extr.domain.user.User">
+		select id,state,gid,
+			username,
+			province,
+			password_question as passwordQuestion,
+			password_answer as passwordAnswer,
+			name,
+			gender,
+			phone,
+			cellphone,
+			email,
+			zjlx,
+			zjhm,
+			birthday,
+			addr,
+			postcode,
+			education,
+			special,
+			have_class as haveClass,
+			have_class_date as haveClassDate,
+			sign_special as signSpecial,
+			sign_class as signClass,
+			add_date as add_Date,
+			lastactivity,
+			unit,
+			reg_date as regDate,
+			reg_end as regEnd
+	 	from web_user where 1=1 
+	<if test="s_state!=''">
+		and state = #{s_state}
+	</if>
+	<if test="s_province!=''">
+		and province = #{s_province}
+	</if>
+	
+	<if test="s_username!=''">
+		and username = #{s_username}
+	</if>
+	<if test="s_name!=''">
+	
+		and name like"%"#{s_name}"%"
+	</if>
+	<if test="s_mayor!=''">
+		and sign_special like"%"#{s_mayor}"%"
+	</if>
+	<if test="s_unit!=''">
+		and unit = #{s_unit}
+	</if>
+	<if test="s_modify!=-1">
+		and add_date >= #{s_modify}
+	</if>
+		<if test="s_from!=-1">
+		and gid = 13
+	</if>
+		<if test="isgraduate!=-1">
+		and is_graduated =  #{isgraduate}
+	</if>
+	ORDER BY reg_date DESC
+	
+	<if test="s_from!=-1">
+		limit #{s_from}
+	</if>
+	<if test="s_to!=0">
+		, #{s_to}
+	</if>
+		
+	</select>
+	
+	<select id ="getUserExamFinal" resultType="com.extr.domain.exam.ExamItem">
+	SELECT max(score) as score,start_time as starttime FROM final_tests where user_id=#{userid} AND finished=1 AND mock_test=0 AND test_type_id=#{finaltestid} AND score>=60
+	</select>
+	
+	<delete id = "deleteSameNameUser">
+	DELETE FROM web_user
+		WHERE id NOT IN(
+			SELECT * FROM (SELECT MAX(id) FROM web_user GROUP BY username
+	) AS tmp)
+	
+	</delete>
+	
+	<insert id="importUsers">
+		 replace into discuz.pre_ucenter_members (
+		`username`,
+		`email`,
+		`password`,
+		`salt`
+	) SELECT DISTINCT
+		(username),
+		CONCAT(username, '@test.com') AS email,
+		PASSWORD,''
+	FROM
+		edu.web_user limit 1,2
+	</insert>
+	
+	<select id="queryUcenterMember" resultType="com.extr.domain.user.UCenterMember">
+	SELECT * FROM discuz.pre_ucenter_members WHERE  uid not in(select `uid` from discuz.pre_common_member)
+	</select>
+	
+	<insert id="insertmemberfields" parameterType="com.extr.domain.user.UCenterMember">
+		replace INTO discuz.pre_ucenter_memberfields SET uid=#{uid},blacklist=''
+	</insert>
+	
+	<insert id="insertcommon_member" parameterType="com.extr.domain.user.UCenterMember">
+		replace INTO discuz.pre_common_member SET `uid`=#{uid},`username`=#{username},`password`=#{password},`email`=#{email},`adminid`='0',`groupid`='10',`regdate`='1307062876',`credits`='0',`timeoffset`='9999'
+	</insert>
+	
+	<insert id="insertcommon_member_status" parameterType="com.extr.domain.user.UCenterMember">
+		replace INTO discuz.pre_common_member_status SET `uid`=#{uid},`regip`='127.0.0.1',`lastip`='127.0.0.1',`lastvisit`='1307062876',`lastactivity`='1307062876',`lastpost`='0',`lastsendmail`='0'
+	</insert>
+	
+	<insert id="insertcommon_member_profile" parameterType="com.extr.domain.user.UCenterMember">
+		replace INTO discuz.pre_common_member_profile SET `uid`=#{uid},`bio`='',`interest`='',`field1`='',`field2`='',`field3`='',`field4`='',`field5`='',`field6`='',`field7`='',`field8`=''
+	</insert>
+	
+	<insert id="insertcommon_member_field_forum" parameterType="com.extr.domain.user.UCenterMember">
+		replace INTO discuz.pre_common_member_field_forum SET `uid`=#{uid} ,`medals`='',`sightml`='',groupterms='',authstr='',groups='',attentiongroup=''
+	</insert>
+	
+	<insert id="insertcommon_member_field_home" parameterType="com.extr.domain.user.UCenterMember">
+		replace INTO discuz.pre_common_member_field_home SET `uid`=#{uid},spacename='',spacecss='',blockposition='',recentnote='',spacenote='',privacy='',feedfriend='',acceptemail='',magicgift='',stickblogs=''
+	</insert>
+	<insert id="insertcommon_member_count" parameterType="com.extr.domain.user.UCenterMember">
+		replace INTO discuz.pre_common_member_count SET `uid`=#{uid},`extcredits1`='0',`extcredits2`='0',`extcredits3`='0',`extcredits4`='0',`extcredits5`='0',`extcredits6`='0',`extcredits7`='0',`extcredits8`='0'
+	</insert>
+</mapper>

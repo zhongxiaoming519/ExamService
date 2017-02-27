@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.extr.persistence.ManageMapper">
+
+	<!-- Manage -->
+	<select id="selectExamChannelList" resultType="com.extr.domain.manage.ExamChannel">
+		SELECT * FROM web_channel WHERE deep=#{deep} 
+		<if test="path != null"> AND path=#{path}</if>
+		ORDER BY ord
+	</select>
+	
+	<select id="selectUserList" resultType="com.extr.domain.user.User">
+		SELECT * FROM web_user WHERE 0=0 
+		<if test="uid != 0"> AND uid=#{uid}</if>
+		<if test="username != null"> AND username=#{null}</if>
+		<if test="live != null"> AND live=#{live}</if>
+		ORDER BY id
+	</select>
+	
+	<insert id="insertUser" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.user.User">
+		INSERT INTO
+		web_user(live,gid,uid,username,password,password_question,password_answer,name,gender,phone,email,cellphone,addr,
+		postcode,birthday,add_date,reg_date,province,unit,sign_special,sign_class,lastactivity,duration,reg_end,state,user_type,zjhm,remark)
+		VALUES
+		(#{live},#{gid},#{uid},#{username},#{password},#{passwordQuestion},#{passwordAnswer},#{name},#{gender},#{phone},#{email},#{cellphone},#{addr},
+		#{postcode},#{birthday},#{add_Date},#{regDate},#{province},#{unit},#{signSpecial},#{signClass},#{lastactivity},#{duration},#{regEnd},#{state},#{userType},#{zjhm},#{remark})
+	</insert>
+	
+	<insert id="insertUserRole" parameterType="int">
+		INSERT INTO	exam_r_user_role(user_id, role_id) VALUES (#{userId},#{roleId})
+	</insert>
+	<delete id="deleteUser" parameterType="com.extr.domain.user.User">
+		DELETE FROM web_user WHERE id=#{id}
+	</delete>
+	
+</mapper>

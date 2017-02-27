@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.extr.persistence.StudentMapper">
+
+	<!-- 学员维护 -->
+	
+	<!-- 批量报名列表查询 -->
+	<select id="selectBatchSignUpList" resultType="com.extr.domain.user.User">
+		SELECT 
+		`id`,
+		`live`,
+		`gid`,
+		`username`,
+		`password`,
+		`password_question` AS
+		passwordQuestion,
+		`password_answer` AS passwordAnswer,
+		`name`,
+		`gender`,
+		`phone`,
+		`email`,
+		`cellphone`,
+		`zjlx`,
+		`zjhm`,
+		`city`,
+		`addr`,
+		`postcode`,
+		`birthday`,
+		`remark`,
+		`add_date` AS add_Date,
+		`reg_date` AS regDate,
+		`lastactivity`,
+		`uid`,
+		`state`,
+		`user_type` AS userType,
+		`province`,
+		`education`,
+		`special`,
+		`sign_special` AS signSpecial,
+		`sign_class` AS
+		signClass,
+		`have_class` AS haveClass,
+		`have_class_date` AS
+		haveClassDate,
+		`aspid`,
+		`duration`,
+		`is_extend_user` AS isExtendUser,
+		`last_modify` AS lastModify,
+		`is_temp_user` AS isTempUser,
+		`graduate_date` AS graduateDate,
+		`reg_end` AS regEnd,
+		`unit`,
+		`is_graduated` AS isGraduated,
+		(SELECT
+		username
+		FROM
+		web_user m
+		WHERE m.id
+		= a.uid) AS creator	
+		 FROM web_user a WHERE 1=1
+		
+		<if test="id != -1">AND id=#{id}</if>
+		<if test="state != ''">AND state=#{state}</if>
+		<if test="username != ''">AND username LIKE "%"#{username}"%"</if>
+		<if test="name != ''">AND name LIKE "%"#{name}"%"</if>
+		<if test="unit != ''">AND unit LIKE "%"#{unit}"%"</if>
+		<if test="last_modify != -1">AND add_date >= #{last_modify}</if>
+		<if test="province != ''">AND province LIKE "%"#{province}"%"</if>
+		<if test="special != ''">AND sign_special LIKE "%"#{special}"%"</if>
+		ORDER BY reg_date desc
+	</select>
+	
+	<select id="getUsersCounts" resultType="int">
+		select count(*) from web_user where 1=1
+		<if test="id != -1">AND id=#{id}</if>
+		<if test="state != ''">AND state=#{state}</if>
+		<if test="username != ''">AND username LIKE "%"#{username}"%"</if>
+		<if test="name != ''">AND name LIKE "%"#{name}"%"</if>
+		<if test="unit != ''"> AND unit LIKE "%"#{unit}"%"</if>
+		<if test="last_modify != -1"> AND last_modify > #{last_modify}</if>
+		<if test="province != ''">AND province LIKE "%"#{province}"%"</if>
+		<if test="special != ''">AND sign_special LIKE "%"#{special}"%"</if>
+	</select>
+	
+	<!-- 单个新增 -->
+	<insert id="insertBatchSignUp" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.extr.domain.user.User">
+		INSERT INTO
+		web_user(username,password,password_question,password_answer,name,gender,phone,email,cellphone,addr,
+		postcode,birthday,add_date,province,unit,sign_special)
+		VALUES
+		(#{username},#{password},#{passwordQuestion},#{passwordAnswer},#{name},#{gender},#{phone},#{email},#{cellphone},#{addr},
+		#{postcode},#{birthday},#{add_Date},#{province},#{unit},#{signSpecial})
+	</insert>
+	<delete id="deleteBatchSignUp" parameterType="int">
+		DELETE FROM web_user WHERE id=#{id}
+	</delete>
+	
+	<!-- 学员管理：习题记录列表查询 -->
+	<select id="getStudentTestRecordList" resultType="com.extr.domain.student.StudentTestRecord">
+		SELECT d.title as proTitle,b.title as courseTitle,c.title as chapterTitle,a.* FROM web_user_exam a 
+			JOIN web_course b ON a.cid=b.id
+			JOIN web_path d ON cast((SUBSTR(b.path, 3)) as SIGNED)=d.id
+    		JOIN web_course_chapter c on cast((SUBSTR(a.cpath,3))as SIGNED) = c.id
+		WHERE a.uid=#{userId} AND c.cate=#{cate}  and a.score >=60
+		ORDER BY a.id desc
+	</select>
+	
+	<select id="getStudentFinalTestRecordList" resultType="com.extr.domain.student.StudentTestRecord">
+		
+		SELECT b.name as proTitle, a.score,a.start_time as add_time FROM final_tests a 
+		JOIN test_types b on a.test_type_id = b.id where a.user_id = #{userId} 
+		AND a.score >=60 
+	
+	</select>
+	
+	
+	
+	<!-- 申请处理：列表查询 -->
+	<select id="getStudentApplyList" resultType="com.extr.domain.student.StudentApply">
+		SELECT a.*,b.name,b.state,b.username ,b.id as userId FROM web_user_apply a JOIN web_user b ON a.userid=b.id 
+		
+		WHERE 1=1
+		<if test="username != null">AND b.username=#{username}</if>
+		<if test="applystate != null">AND applystate=#{applystate}</if>
+		<if test="state != null">AND state=#{state}</if>
+		<if test="approve != -1">AND approve=#{approve}</if>
+		ORDER BY a.id desc
+	</select>
+	<update id="updateStudentApplyList" parameterType="int">
+		update web_user_apply set approve = #{approve},comment = #{comment} where id = #{id}
+	</update>
+	<delete id="deleteStudentApplyById" parameterType="int">
+		delete from web_user_apply where id = #{userId}
+	</delete>
+	
+	<!-- 学员维护：结业查询列表记录 -->
+	<select id="getGraduatedList" resultType="com.extr.domain.student.GraduatedQuery">
+		SELECT a.id,a.username,a.`name`,b.title,a.is_graduated,a.graduate_date,a.state  
+		FROM web_user a JOIN web_course b ON a.sign_special=b.id WHERE 1=1
+		<if test="id != -1">AND a.id=#{id}</if>
+		<if test="username != null">AND a.username LIKE "%"#{username}"%"</if>
+		<if test="name != null">AND a.name LIKE "%"#{name}"%"</if>
+		<if test="graduated == 0">AND a.state!='j' and gid!=1</if>
+		<if test="graduated ==1">AND a.state ='j' and gid!=1</if>
+		<if test="unit != null">AND a.unit=#{unit}</if>
+		<if test="pmid != '-1'">AND a.sign_special like "%"#{pmid}"%"</if>
+		ORDER BY a.id desc
+	</select>
+	
+	<!--结业数量查询 -->
+	<select id="getGraduatedCounts" resultType="int">
+		SELECT count(*) 
+		FROM web_user a JOIN web_course b ON a.sign_special=b.id WHERE 1=1
+		<if test="id != -1">AND a.id=#{id}</if>
+		<if test="username != null">AND a.username LIKE "%"#{username}"%"</if>
+		<if test="name != null">AND a.name LIKE "%"#{name}"%"</if>
+		<if test="graduated == 0">AND a.state!='j' and gid!=1</if>
+		<if test="graduated ==1">AND a.state ='j' and gid!=1</if>
+		<if test="unit != null">AND a.unit=#{unit}</if>
+		<if test="pmid != '-1'">AND a.sign_special like "%"#{pmid}"%"</if>
+		
+	</select>
+	<!-- 学员维护：延期管理列表查询 CAST(cola AS SIGNED)-CAST(100 AS SIGNED)-->
+	<select id="getDurationList" resultType="com.extr.domain.student.Duration">
+		SELECT a.id,a.username,a.`name`,b.title,a.duration,a.state,a.reg_date,a.reg_end,(SELECT SUM(cast(enddate as signed)-cast(startdate as signed)) as v FROM web_user_apply c WHERE c.userid=a.id and c.applystate='e'  and c.approve=1) as extend_duration,(SELECT SUM(cast(enddate as signed)-cast(startdate as signed)) as v FROM web_user_apply c WHERE c.userid=a.id and c.applystate='x' and c.approve=1) as pause_duration
+		FROM web_user a JOIN web_course b ON a.sign_special=b.id WHERE 1=1 
+		<if test="id != -1"> AND a.id=#{id}</if>
+		<if test="username != null">AND a.username LIKE "%"#{username}"%"</if>
+		<if test="name != null">AND a.name LIKE "%"#{name}"%"</if>
+		<if test="state != null">AND a.state in (#{state})</if>
+		<if test="unit != null">AND a.unit=#{unit}</if>
+		<if test="pmid != -1">AND a.sign_special=#{pmid}</if>
+		ORDER BY a.id desc
+	</select>
+	<!-- 学员维护：总数查询 -->
+	<select id="getDurationCounts" resultType="int">
+		SELECT count(*)
+		FROM web_user a JOIN web_course b ON a.sign_special=b.id WHERE 1=1
+		<if test="id != -1">AND a.id=#{id}</if>
+		<if test="username != null">AND a.username LIKE "%"#{username}"%"</if>
+		<if test="name != null">AND a.name LIKE "%"#{name}"%"</if>
+		<if test="state != null">AND a.state in (#{state})</if>
+		
+		<if test="unit != null">AND a.unit=#{unit}</if>
+		<if test="pmid != -1">AND a.sign_special=#{pmid}</if>
+		
+	</select>
+		<select id="getUserByStates" resultType="com.extr.domain.user.User">
+
+		SELECT
+		`id`,
+		`live`,
+		`gid`,
+		`username`,
+		`password`,
+		`password_question` AS passwordQuestion,
+		`password_answer` AS passwordAnswer,
+		`name`,
+		`gender`,
+		phone,
+		`email`,
+		`cellphone`,
+		`zjlx`,
+		`zjhm`,
+		`city`,
+		`addr`,
+		`postcode`,
+		`birthday`,
+		`remark`,
+		`add_date` AS add_Date,
+		`reg_date` AS regDate,
+		`lastactivity`,
+		`uid`,
+		`state`,
+		`user_type` AS userType,
+		`province`,
+		`education`,
+		`special`,
+		`sign_special` AS signSpecial,
+		`sign_class` AS signClass,
+		`have_class` AS haveClass,
+		`have_class_date` AS haveClassDate,
+		`aspid`,
+		`duration`,
+		`is_extend_user` AS isExtendUser,
+		`last_modify` AS
+		lastModify,
+		`is_temp_user` AS isTempUser,
+		`graduate_date` AS
+		graduateDate,
+		`reg_end` AS regEnd,
+		`unit`,
+		`is_graduated` AS isGraduated
+		FROM
+		web_user
+		WHERE state !='q' and state !='j' and reg_date > 0
+
+	</select>
+	
+</mapper>

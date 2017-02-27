@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="jquery-1.9.0.min.js"></script>
+</head>
+<body>
+<input id = "btn_log" type="button" value="登陆"></input>
+<input id = "btn_user" type="button" value="用户"></input>
+</body>
+<script>
+
+	$("#btn_log").click(function(){
+		login();
+	});
+	$("#btn_user").click(function(){
+		getuser();
+	});
+	
+	var token = null;
+	
+    function login(){
+    
+    	var data = new Object();
+			data.username =  'admin';
+			data.password = '123456';
+    
+    $.ajax({
+        headers : {
+            'Accept' : 'application/json',
+            'Content-Type' : 'application/json'
+        },
+        async:false,
+        type : "POST",
+        url : "http://192.168.253.15:8080/ExamService/authenticate/admin/123456",
+        data : JSON.stringify(data),
+        success : function(message, tst, jqXHR) {
+            //if (!util.checkSessionOut(jqXHR))
+            //    return false;
+			token = message.token;
+            if (message.result == "success") {
+                //$(".comment-form textarea").val("");
+				
+				console.log(message);
+                //ar html = comment.generatMyComment(data.contentMsg);
+
+                //$(".comment-list").prepend(html);
+            } else {
+                //util.error("操作失败请稍后尝试:" + message.result);
+            }
+        },
+        error : function(jqXHR, textStatus) {
+            //util.error("操作失败请稍后尝试");
+        }
+    });
+    
+    
+    }
+	
+	function getuser(){
+		    $.ajax({
+        headers : {
+            'Accept' : 'application/json',
+            'Content-Type' : 'application/json',
+			'X-Auth-Token':token
+        },
+        async:false,
+        type : "POST",
+        url : "http://192.168.253.15:8080/ExamService/userauthority",
+        
+        success : function(message, tst, jqXHR) {
+            //if (!util.checkSessionOut(jqXHR))
+            //    return false;
+			
+            if (message.result == "success") {
+                //$(".comment-form textarea").val("");
+				
+				console.log(message);
+                //ar html = comment.generatMyComment(data.contentMsg);
+
+                //$(".comment-list").prepend(html);
+            } else {
+                //util.error("操作失败请稍后尝试:" + message.result);
+            }
+        },
+        error : function(jqXHR, textStatus) {
+            //util.error("操作失败请稍后尝试");
+        }
+    });
+	}
+    
+</script>
+</html>
